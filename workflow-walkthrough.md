@@ -1,6 +1,6 @@
 # SafeMeds AI — Workflow Walkthrough
 
-![SafeMeds AI Workflow](../assets/SafeMeds_Workflow.png)
+![SafeMeds AI Workflow](https://github.com/MikaelHailu/safemeds-ai/blob/main/SafeMeds_Workflow.png)
 
 ## Overview
 
