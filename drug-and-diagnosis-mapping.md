@@ -15,7 +15,7 @@ Both mappings are embedded directly in Job 02 (`job-02-resolve-drugs-rxnav.js`) 
 
 ### Why This Is Needed
 
-DHIS2 stores drugs using local option set values like `EA104 - WARFARIN 5MG`. These codes are specific to the SARC programme and are not recognised by external APIs like RxNav or OpenFDA.
+DHIS2 stores drugs using local option set values like `EA104 - WARFARIN 5MG`. These codes are specific to the prototype programme and are not recognised by external APIs like RxNav or OpenFDA.
 
 The formulary mapping converts these local codes to:
 - **Generic name** (e.g. `WARFARIN`) — used in the Claude AI prompt
@@ -101,7 +101,7 @@ The `term` field is designed to match the clinical language Claude AI understand
 
 To add a diagnosis:
 
-1. Find the ICPC-2 code at [icpc2plus.com](https://www.icpc2plus.com/)
+1. Find the ICPC-2 code at [www.helsedirektoratet.no](https://www.helsedirektoratet.no/digitalisering-og-e-helse/helsefaglige-kodeverk/icpc/icpc-2e--english-version)
 2. Add an entry to `ICPC_MAP` in `job-02-resolve-drugs-rxnav.js`
 
 Example:
