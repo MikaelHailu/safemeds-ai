@@ -2,7 +2,7 @@
 
 ## System Overview
 
-The DHIS2 AI Drug Safety Checker is a fully automated workflow that runs on OpenFn Lightning. It polls DHIS2 every 5 minutes for new prescription events and generates AI-powered safety assessments written back to the patient's Tracker record.
+SafeMeds AI is a fully automated workflow that runs on OpenFn Lightning. It polls DHIS2 every 5 minutes for new prescription events and generates AI-powered safety assessments written back to the patient's Tracker record.
 
 ## Data Flow
 
@@ -23,6 +23,9 @@ The DHIS2 AI Drug Safety Checker is a fully automated workflow that runs on Open
 │                                                   │
 │  Job 01: Fetch Recent Prescriptions              │
 │  ├── GET /api/events?lastUpdatedDuration=5m      │
+│  ├── Deduplication: check Source Prescription    │
+│  │   Event UID against existing Drug Safety      │
+│  │   Alert events per TEI                        │
 │  └── GET /api/trackedEntityInstances/{id}        │
 │                    │                             │
 │  Job 02: Resolve Drugs + RxNav                   │
@@ -38,8 +41,9 @@ The DHIS2 AI Drug Safety Checker is a fully automated workflow that runs on Open
 │  └── Parse JSON response                         │
 │                    │                             │
 │  Job 05: Write Drug Safety Alert                 │
-│  ├── Deduplication check                         │
-│  └── POST /api/tracker                           │
+│  ├── POST /api/tracker (Drug Safety Alert event) │
+│  └── Stores Source Prescription Event UID        │
+│      for deduplication on next poll              │
 └───────────────────┬─────────────────────────────┘
                     │
                     ▼
@@ -55,6 +59,7 @@ The DHIS2 AI Drug Safety Checker is a fully automated workflow that runs on Open
 │  - ADR Warning                                   │
 │  - Treatment Appropriateness                     │
 │  - Safety Check Date                             │
+│  - Source Prescription Event (hidden, for dedup) │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -68,9 +73,9 @@ The DHIS2 AI Drug Safety Checker is a fully automated workflow that runs on Open
 
 ### OpenFDA
 - **URL:** `https://api.fda.gov/drug/label.json`
-- **Auth:** None (public API, 1000 req/day unauthenticated)
-- **Purpose:** FDA drug label data — contraindications, warnings, pregnancy info
-- **Note:** Get a free API key at https://open.fda.gov/apis/authentication/ for higher limits
+- **Auth:** None (public API)
+- **Purpose:** FDA drug label data — contraindications, warnings, pregnancy and age-specific info
+- **Note:** Get a free API key at https://open.fda.gov/apis/authentication/ for higher request allowance
 
 ### Anthropic Claude (or preferred LLM)
 - **Model:** `claude-haiku-4-5-20251001`
@@ -91,13 +96,18 @@ The DHIS2 AI Drug Safety Checker is a fully automated workflow that runs on Open
 ## Key Design Decisions
 
 ### Cron polling vs webhook
-Given the webhook for events data is not currenly supported in DHIS2, the cron polling approach has been opted for as a more reliable approach without any DHIS2 server configuration.
+DHIS2 program stage webhook notifications are not reliably supported in DHIS2 v40 — confirmed on multiple instances. The cron polling approach is more reliable and requires no DHIS2 server configuration beyond the standard programme setup.
 
 ### Separate steps for each job
-Each job is a separate OpenFn step with its own adaptor and credential. This allows fine-grained credential control — jobs 02 and 03 have no credential so `http.get` calls to external public APIs are unauthenticated.
+Each job is a separate OpenFn step with its own adaptor and credential. This allows fine-grained credential control — jobs 02 and 03 have no credential so `http.get` calls to external public APIs are unauthenticated. Attaching a credential to these steps breaks the external API calls.
 
 ### Drug formulary as embedded JSON
-The drug lookup table is embedded in job 02 rather than fetched from an external source. This avoids a network dependency and keeps resolution fast and reliable.
+The drug lookup table is embedded in job 02 rather than fetched from an external source. This avoids a network dependency and keeps resolution fast and reliable in low-connectivity environments.
 
-### Deduplication
-Job 05 checks for prescriptions that have already been checked. This prevents duplicate alerts if the workflow runs multiple times while a prescription is still within the poll window.
+### Deduplication via Source Prescription Event
+Each Drug Safety Alert stores the UID of the prescription event that triggered it in a hidden data element (`Source Prescription Event`, UID: `dW6xOGoNWj7`). On each poll, job 01 checks whether a Drug Safety Alert already exists for that specific prescription event UID before processing it.
+
+This approach correctly handles patients with multiple prescription stage events from different visits — each prescription is checked independently regardless of whether alerts exist for other prescriptions by the same patient.
+
+### Why not update the prescription event directly?
+An alternative deduplication approach would be to set a `Safety Check Completed` flag directly on the prescription event after processing. However, DHIS2 v40 does not support PATCH or POST updates to completed events via the legacy `/api/events` endpoint (returns 405 Method Not Allowed). The Source Prescription Event approach avoids this limitation entirely.
