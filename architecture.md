@@ -109,5 +109,3 @@ Each Drug Safety Alert stores the UID of the prescription event that triggered i
 
 This approach correctly handles patients with multiple prescription stage events from different visits — each prescription is checked independently regardless of whether alerts exist for other prescriptions by the same patient.
 
-### Why not update the prescription event directly?
-An alternative deduplication approach would be to set a `Safety Check Completed` flag directly on the prescription event after processing. However, DHIS2 v40 does not support PATCH or POST updates to completed events via the legacy `/api/events` endpoint (returns 405 Method Not Allowed). The Source Prescription Event approach avoids this limitation entirely.
