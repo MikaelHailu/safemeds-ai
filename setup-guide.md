@@ -4,7 +4,7 @@
 
 - OpenFn Lightning account — [app.openfn.org](https://app.openfn.org)
 - DHIS2 instance (v2.38+) with the Primary Health Record programme metadata
-- Anthropic API key — [console.anthropic.com](https://console.anthropic.com)
+- Anthropic/Other LLM API key — [console.anthropic.com](https://console.anthropic.com)
 
 ---
 
