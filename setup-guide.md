@@ -124,15 +124,3 @@ To use this workflow with a different DHIS2 programme:
 
 ---
 
-## Troubleshooting
-
-| Issue | Solution |
-|-------|---------|
-| 401 Unauthorized on DHIS2 | Check credential — use plain password, not PAT |
-| `require is not defined` | Remove any `require('axios')` calls — use `http.get` with a plain URL string instead |
-| Claude returning fallback values | Check Claude-API credential is attached to the Claude Safety Assessment step |
-| No credential on jobs 02/03 | Remove any credential from Resolve Drugs and Fetch OpenFDA steps |
-| Duplicate alerts | Deduplication uses Source Prescription Event UID — check `dW6xOGoNWj7` is in the Drug Safety Alert stage |
-| 0 events fetched | Prescription may be older than 5 minutes — temporarily change `POLL_DURATION` to `'1h'` for testing |
-| 405 Method Not Allowed on events update | Expected — DHIS2 v40 does not support PATCH on completed events. Deduplication is handled via Source Prescription Event UID instead |
-| `prompt()` error: messages.0.content required | `state.userPrompt` is undefined — check job 04 step 1 returns `userPrompt: 'skip'` when no patient |
