@@ -249,7 +249,7 @@ The authors accept no liability for clinical decisions made on the basis of outp
 
 ## License
 
-Copyright (c) 2026 Mikael Hailu
+MIT License — Copyright (c) 2026 Mikael Hailu
 
 ---
 
